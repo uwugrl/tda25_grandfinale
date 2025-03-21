@@ -17,6 +17,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/joy": "^5.0.0-beta.52",
     "@prisma/client": "^6.5.0",
+    "@sentry/nextjs": "^9.8.0",
     "next": "15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

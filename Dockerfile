@@ -11,6 +11,9 @@ COPY DockerEntrypoint.sh .
 COPY next.config.ts .
 COPY postcss.config.mjs .
 COPY README.md .
+COPY sentry.client.config.ts .
+COPY sentry.edge.config.ts .
+COPY sentry.server.config.ts .
 COPY tsconfig.json .
 
 COPY public/ ./public

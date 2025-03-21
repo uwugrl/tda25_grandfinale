@@ -1,20 +1,8 @@
 import { Button, Input, Modal, ModalClose, ModalDialog, Typography } from "@mui/joy";
 import { PrismaClient } from "@prisma/client";
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { InferGetServerSidePropsType } from "next";
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
-
-const getWebSocketURL = () => {
-  if (typeof window === "undefined") return ""; // Ensure SSR safety
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws"; // Use wss for production (secure)
-  return `${protocol}://${window.location.host}/ap/chat`;
-};
-
-const socket = io(getWebSocketURL(), {
-  path: "/api/chat",
-  transports: ["websocket"],
-  reconnectionAttempts: 3,
-});
+import { io, Socket } from "socket.io-client";
 
 const prisma = new PrismaClient();
 
@@ -29,6 +17,7 @@ export async function getServerSideProps() {
 }
 
 export default function SocketComponent(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<{username: string, message: string}[]>(props.messages); 
   const [input, setInput] = useState("");
 
@@ -36,28 +25,45 @@ export default function SocketComponent(props: InferGetServerSidePropsType<typeo
   const [showUsernameDialog, setShowUsernameDialog] = useState(true);
 
   useEffect(() => {
-    console.log("UseEffect called");
-    socket.on("connect", () => {
-      console.log("Connected to WebSocket server:", socket.id);
+    console.log("🔄 Initializing WebSocket connection...");
+
+    const getWebSocketURL = () => {
+      if (typeof window === "undefined") return ""; // Ensure SSR safety
+      return `${window.location.protocol}//${window.location.host}`;
+    };
+
+    console.log("🔗 WebSocket URL:", getWebSocketURL());
+
+    const newSocket = io(getWebSocketURL(), {
+      path: "/api/chat",
     });
 
-    socket.on("message", (msg: {username: string, message: string}) => {
-      console.log("Received message from server:", msg);
+    newSocket.on("connect", () => {
+      console.log("✅ Connected to WebSocket server:", newSocket.id);
+    });
+
+    newSocket.on("connect_error", (err) => {
+      console.error("❌ Connection error:", err.message);
+    });
+
+    newSocket.on("message", (msg: { username: string, message: string }) => {
+      console.log("📩 Received message:", msg);
       setMessages((prev) => [...prev, msg]);
       window.scrollTo(0, document.body.scrollHeight);
     });
 
+    setSocket(newSocket);
+
     return () => {
-      console.log("Disconnecting from WebSocket server:", socket.id);
-      socket.off("message");
-      socket.disconnect();
+      console.log("🔌 Disconnecting WebSocket...");
+      newSocket.disconnect();
     };
   }, []);
 
   const sendMessage = () => {
     if (input) {
       console.log("Sending message:", input);
-      socket.emit("message", {
+      socket?.emit("message", {
         username,
         message: input
       });
@@ -97,7 +103,7 @@ export default function SocketComponent(props: InferGetServerSidePropsType<typeo
           <Typography level="h2">Enter your username</Typography>
           <Input value={username} onChange={(e) => setUsername(e.target.value)} />
           <Button onClick={() => {
-            socket.emit("user-connect", {
+            socket?.emit("user-connect", {
               username
             });
             setShowUsernameDialog(false);
