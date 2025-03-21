@@ -1,6 +1,9 @@
 import { NextApiResponseServerIO } from "@/types/socket";
+import { PrismaClient } from "@prisma/client";
 import { NextApiRequest } from "next";
 import { Server } from "socket.io";
+
+const prisma = new PrismaClient();
 
 export default function handler(req: NextApiRequest, res: NextApiResponseServerIO) {
     if (!res.socket.server.io) {
@@ -22,6 +25,16 @@ export default function handler(req: NextApiRequest, res: NextApiResponseServerI
                     return;
                 }
                 console.log("📩 Received message:", msg);
+
+                (async () => {
+                    await prisma.messages.create({
+                        data: {
+                            username: msg.username,
+                            message: msg.message
+                        }
+                    })
+                })()
+
                 io.emit("message", { 
                     username: msg.username, 
                     message: msg.message
@@ -30,6 +43,16 @@ export default function handler(req: NextApiRequest, res: NextApiResponseServerI
 
             socket.on("user-connect", (msg: {username: string}) => {
                 console.log("📡 Client connected:", msg);
+
+                (async () => {
+                    await prisma.messages.create({
+                        data: {
+                            username: "System",
+                            message: `${msg.username} joined the chat!`
+                        }
+                    })
+                })()
+                
                 io.emit("message", {
                     username: "System",
                     message: `${msg.username} joined the chat!`,
