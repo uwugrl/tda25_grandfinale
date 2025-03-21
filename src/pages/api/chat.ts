@@ -9,6 +9,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponseServerI
     if (!res.socket.server.io) {
         console.log("🔌 Initializing WebSocket server on /ap/chat...");
 
+        // @ts-ignore
         const io = new Server(res.socket.server as any, {
             path: "/api/chat",
             cors: {
