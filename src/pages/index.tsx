@@ -1,16 +1,24 @@
-import { Button, Input, Modal, ModalClose, ModalDialog, Typography, TypographyClassKey } from "@mui/joy";
+import { Button, Input, Modal, ModalClose, ModalDialog, Typography } from "@mui/joy";
 import { PrismaClient } from "@prisma/client";
-import { GetServerSideProps, GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3000", {
+const getWebSocketURL = () => {
+  if (typeof window === "undefined") return ""; // Ensure SSR safety
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws"; // Use wss for production (secure)
+  return `${protocol}://${window.location.host}/ap/chat`;
+};
+
+const socket = io(getWebSocketURL(), {
   path: "/api/chat",
+  transports: ["websocket"],
+  reconnectionAttempts: 3,
 });
 
 const prisma = new PrismaClient();
 
-export async function getServerSideProps(ctx:GetServerSidePropsContext) {
+export async function getServerSideProps() {
   
   const messages = (await prisma.messages.findMany()).map(x => ({username: x.username, message: x.message}));
   return {
