@@ -396,6 +396,33 @@ function PageVoting(props: {
     </>
   }
 
+  const leaveUser = () => {
+    fetch('/api/leavevoting', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        code: props.code,
+        username: props.username
+      })
+    }).then(x => {
+      if (x.ok) {
+        x.json().then(y => {
+          localStorage.removeItem('code');
+          localStorage.removeItem('username');
+          location.href = '/';
+        }).catch(x => {
+          captureException(x);
+        });
+      } else {
+        captureException(x);
+      }
+    }).catch(x => {
+      captureException(x);
+    });
+  }
+
   if (paused) {
     return <>
       <Typography>Hlasování ještě nezačalo</Typography>
@@ -403,7 +430,10 @@ function PageVoting(props: {
   }
 
   if (!hasPresenter) {
-    return <Typography>Čekání na začátek hlasování</Typography>
+    return <Stack gap={1}>
+      <Typography>Čekání na začátek hlasování</Typography>
+      <Button color="danger" onClick={leaveUser}>Odejít</Button>
+    </Stack>
   }
 
   if (presenting) {
