@@ -4,6 +4,7 @@ import { captureException } from "@sentry/nextjs";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next"
 import { useRouter } from "next/router";
 import React from "react";
+import QRCode from "qrcode";
 
 const prisma = new PrismaClient();
 
@@ -122,6 +123,12 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
         navigator.clipboard.writeText(`${location.protocol}//${location.host}#${params.room.code}`);
     }
 
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+
+    React.useEffect(() => {
+        QRCode.toCanvas(canvasRef.current, `${location.protocol}//${location.host}#${params.room.code}`);
+    }, [params.room.presenters]);
+
     return (
         <div className="w-2/3 m-auto">
             <Button onClick={goBack}>Zpět</Button>
@@ -132,6 +139,10 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
                 {params.room.showNext && <Button onClick={unpauseRoom}>Další prezentující</Button>}
                 <Button onClick={copyLink}>Kopírovat odkaz</Button>
             </Stack>
+
+            <div>
+                <canvas width={400} height={400} ref={canvasRef}></canvas>
+            </div>
             
             <Typography level="h2">Prezentující</Typography>
             
