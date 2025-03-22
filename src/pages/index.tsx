@@ -460,6 +460,11 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
         setCode(localStorage.getItem('code') as string);
         setUsername(localStorage.getItem('username') as string);
       }
+
+      if (location.hash.length === 7 && location.hash.slice(1).match(/^[1-9]{6}$/)) {
+        setCode(location.hash.slice(1));
+        setPage("username");
+      }
     }
   }, []);
 

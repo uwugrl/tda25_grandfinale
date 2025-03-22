@@ -1,4 +1,4 @@
-import { Button, Table, Typography } from "@mui/joy";
+import { Button, Stack, Table, Typography } from "@mui/joy";
 import { PrismaClient } from "@prisma/client";
 import { captureException } from "@sentry/nextjs";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next"
@@ -53,6 +53,7 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
             room: {
                 id: roomData.id,
                 name: roomData.name,
+                code: roomData.inviteCode,
                 presenters: roomData.Presenters.map(x => ({
                     id: x.id,
                     idea: x.idea,
@@ -117,13 +118,20 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
         });
     }
 
+    const copyLink = () => {
+        navigator.clipboard.writeText(`${location.protocol}//${location.host}#${params.room.code}`);
+    }
+
     return (
         <div className="w-2/3 m-auto">
             <Button onClick={goBack}>Zpět</Button>
             <Typography level="h1">Room: {params.room.name}</Typography>
 
-            {params.room.state === "starting" && <Button onClick={startRoom}>Start</Button>}
-            {params.room.showNext && <Button onClick={unpauseRoom}>Další prezentující</Button>}
+            <Stack gap={1} direction={"row"}>
+                {params.room.state === "starting" && <Button onClick={startRoom}>Start</Button>}
+                {params.room.showNext && <Button onClick={unpauseRoom}>Další prezentující</Button>}
+                <Button onClick={copyLink}>Kopírovat odkaz</Button>
+            </Stack>
             
             <Typography level="h2">Prezentující</Typography>
             
