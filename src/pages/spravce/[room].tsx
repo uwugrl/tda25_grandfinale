@@ -98,16 +98,6 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
             body: JSON.stringify({
                 id: params.room.id
             })
-        }).then(x => {
-            if (x.ok) {
-                x.json().then(y => {
-                    location.href = '/spravce';
-                }).catch(x => {
-                    captureException(x);
-                });
-            } else {
-                captureException(x);
-            }
         }).catch(x => {
             captureException(x);
         });
@@ -122,16 +112,6 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
             body: JSON.stringify({
                 id: params.room.id
             })
-        }).then(x => {
-            if (x.ok) {
-                x.json().then(y => {
-                    location.href = '/spravce';
-                }).catch(x => {
-                    captureException(x);
-                });
-            } else {
-                captureException(x);
-            }
         }).catch(x => {
             captureException(x);
         });
