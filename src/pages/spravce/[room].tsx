@@ -93,6 +93,8 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
 
 export default function Room(params: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
+    const [showQR, setShowQR] = React.useState(false);
+
     const router = useRouter();
 
     React.useEffect(() => {
@@ -146,7 +148,9 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
     React.useEffect(() => {
-        QRCode.toCanvas(canvasRef.current, `${location.protocol}//${location.host}#${params.room.code}`);
+        if (showQR) {
+            QRCode.toCanvas(canvasRef.current, `${location.protocol}//${location.host}#${params.room.code}`);
+        }
     }, [params.room.presenters]);
 
     return (
@@ -158,13 +162,14 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
                 {params.room.state === "starting" && <Button onClick={startRoom}>Start</Button>}
                 {params.room.showNext && <Button onClick={unpauseRoom}>Další prezentující</Button>}
                 <Button onClick={copyLink}>Kopírovat odkaz</Button>
+                <Button onClick={() => setShowQR(true)}>Zobrazit QR kód</Button>
             </Stack>
 
-            <div>
+            {showQR && <div>
                 <canvas width={400} height={400} ref={canvasRef}></canvas>
-            </div>
+            </div>}
             
-            <Typography level="h2">Prezentující</Typography>
+            <Typography level="h2">Prezentující ({params.room.presenters.length})</Typography>
             
             <Table>
                 <thead>
@@ -187,7 +192,7 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
                 </tbody>
             </Table>
 
-            <Typography level="h2">Hlasující</Typography>
+            <Typography level="h2">Hlasující ({params.room.voters.length})</Typography>
 
             <Table>
                 <thead>
