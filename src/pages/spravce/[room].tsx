@@ -5,6 +5,7 @@ import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next"
 import { useRouter } from "next/router";
 import React from "react";
 import QRCode from "qrcode";
+import { intervalToDuration } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -14,19 +15,19 @@ async function getBestPresenters(id: number) {
             joinedRoomId: id
         },
         include: {
-        Votes: true,
+            Votes: true,
         },
     });
 
     const rankedPresenters = bestPresenters.map((presenter) => {
         const totalVotes = presenter.Votes.length || 1;
         return {
-        id: presenter.id,
-        username: presenter.username,
-        idea: presenter.idea,
-        prinosnost: presenter.Votes.reduce((acc, v) => acc + v.prinosnost, 0) / totalVotes,
-        kreativita: presenter.Votes.reduce((acc, v) => acc + v.kreativita, 0) / totalVotes,
-        uskutecnost: presenter.Votes.reduce((acc, v) => acc + v.uskutecnost, 0) / totalVotes,
+            id: presenter.id,
+            username: presenter.username,
+            idea: presenter.idea,
+            prinosnost: presenter.Votes.reduce((acc, v) => acc + v.prinosnost, 0) / totalVotes,
+            kreativita: presenter.Votes.reduce((acc, v) => acc + v.kreativita, 0) / totalVotes,
+            uskutecnost: presenter.Votes.reduce((acc, v) => acc + v.uskutecnost, 0) / totalVotes,
         };
     });
 
@@ -40,7 +41,7 @@ async function getBestPresenters(id: number) {
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const { adminToken } = ctx.req.cookies;
-    
+
     if (!adminToken) {
         return {
             redirect: {
@@ -102,15 +103,40 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
         where: {
             joinedRoomId: Number(room),
             OR: [
-                {votingState: 1},
-                {presenting: true}
+                { votingState: 1 },
+                { presenting: true }
             ]
         }
     });
 
-    let summary = null as any;
+    let summary = null as {
+        bestByPrinosnost: {
+            id: number;
+            username: string;
+            idea: string;
+            prinosnost: number;
+            kreativita: number;
+            uskutecnost: number;
+        }[];
+        bestByKreativita: {
+            id: number;
+            username: string;
+            idea: string;
+            prinosnost: number;
+            kreativita: number;
+            uskutecnost: number;
+        }[];
+        bestByUskutecnost: {
+            id: number;
+            username: string;
+            idea: string;
+            prinosnost: number;
+            kreativita: number;
+            uskutecnost: number;
+        }[];
+    } | null;
 
-    if (presenter) {
+    if (!presenter) {
         summary = await getBestPresenters(roomData.id);
     }
 
@@ -121,11 +147,16 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
                 id: roomData.id,
                 name: roomData.name,
                 code: roomData.inviteCode,
-                presenters: roomData.Presenters.map(x => ({
-                    id: x.id,
-                    idea: x.idea,
-                    votingFinished: x.votingState === 2
-                })),
+                presenters: roomData.Presenters.map(x => {
+                    const a = intervalToDuration({ start: x.presentationStart ?? new Date(), end: x.presentationEnd ?? new Date() })
+                    return {
+                        id: x.id,
+                        idea: x.idea,
+                        votingFinished: x.votingState === 2,
+                        presenting: x.presenting,
+                        duration: `${(a.minutes ?? 0).toString().padStart(2, '0')}:${(a.seconds ?? 0).toString().padStart(2, '0')}`
+                    }
+                }),
                 voters: roomData.Voters.map(x => ({
                     id: x.id,
                     username: x.username
@@ -133,7 +164,7 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
                 state: roomData.state,
                 showNext: roomData.paused || !anyonePresenting
             },
-            summary: summary ? summary : null
+            summary: summary ?? null
         }
     }
 }
@@ -216,33 +247,27 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
                 <canvas width={400} height={400} ref={canvasRef}></canvas>
             </div>}
             
-            {params.summary && params.summary.prinosnost && params.summary.kreativita && params.summary.uskutecnost && <Stack gap={1}>
+            {params.summary && params.summary.bestByPrinosnost && params.summary.bestByKreativita && params.summary.bestByUskutecnost &&
+            params.summary.bestByUskutecnost.length > 0 && params.summary.bestByKreativita.length > 0 && params.summary.bestByPrinosnost.length > 0 && <Stack gap={1}>
                 <Typography level="h3">Přínosnost</Typography>
-                <Typography>{params.summary.prinosnost.idea} - {params.summary.prinosnost.username}</Typography> 
-                <Slider  value={params.summary.prinosnost.prinosnost} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
-                <br />
+                <Typography>{params.summary.bestByPrinosnost[0].idea} - {params.summary.bestByPrinosnost[0].username}</Typography>
+                <Slider value={params.summary.bestByPrinosnost[0].prinosnost} min={1} max={6} marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
                 <Typography level="h3">Kreativita</Typography>
-                <Typography>{params.summary.kreativita.idea} - {params.summary.kreativita.username}</Typography> 
-                <Slider  value={params.summary.kreativita.kreativita} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
-                <br />
+                <Typography>{params.summary.bestByKreativita[0].idea} - {params.summary.bestByKreativita[0].username}</Typography>
+                <Slider value={params.summary.bestByKreativita[0].kreativita} min={1} max={6} marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
                 <Typography level="h3">Uskutečnitelnost</Typography>
-                <Typography>{params.summary.uskutecnost.idea} - {params.summary.uskutecnost.username}</Typography> 
-                <Slider value={params.summary.uskutecnost.uskutecnost} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
-                <br />
-                <Button onClick={() => {
-                localStorage.removeItem('code');
-                localStorage.removeItem('username');
-                location.href = '/';
-                }}>Zpět</Button>
+                <Typography>{params.summary.bestByUskutecnost[0].idea} - {params.summary.bestByUskutecnost[0].username}</Typography>
+                <Slider value={params.summary.bestByUskutecnost[0].uskutecnost} min={1} max={6} marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
             </Stack>}
 
             <Typography level="h2">Prezentující ({params.room.presenters.length})</Typography>
-            
+
             <Table>
                 <thead>
                     <tr>
                         <th>Návrh</th>
                         <th>Dokončen</th>
+                        <th>Čas prezentace</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -252,7 +277,10 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
                                 <Typography>{x.idea}</Typography>
                             </td>
                             <td>
-                                <Typography>{x.votingFinished ? 'Výsledek hlasování' : ''}</Typography>
+                                <Typography>{x.votingFinished ? 'Dokončil' : x.presenting ? 'Prezentuje' : ''}</Typography>
+                            </td>
+                            <td>
+                                <Typography>{x.duration}</Typography>
                             </td>
                         </tr>
                     ))}
