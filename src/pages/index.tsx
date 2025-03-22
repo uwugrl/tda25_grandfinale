@@ -54,12 +54,12 @@ function PageEnterCode(props: {
         localStorage.setItem('code', enteredCode);
         setLoading(false);
       } else {
-        setError('Neplatný kód');
+        setError('Chyba');
         setLoading(false);
         captureException(x);
       }
     }).catch(x => {
-      setError('Neplatný kód');
+      setError('Chyba');
       setLoading(false);
       captureException(x);
     });
@@ -417,12 +417,12 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
           captureException(x);
         });
       } else {
-        setError('Neplatný kód');
+        setError('Chyba');
         setLoading(false);
         captureException(x);
       }
     }).catch(x => {
-      setError('Neplatný kód');
+      setError('Chyba');
       setLoading(false);
       captureException(x);
     });
@@ -450,12 +450,12 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
           captureException(x);
         });
       } else {
-        setError('Neplatný kód');
+        setError('Chyba');
         setLoading(false);
         captureException(x);
       }
     }).catch(x => {
-      setError('Neplatný kód');
+      setError('Chyba');
       setLoading(false);
       captureException(x);
     });
@@ -474,7 +474,7 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
       if (location.hash.length === 7 && location.hash.slice(1).match(/^[1-9]{6}$/)) {
         setCode(location.hash.slice(1));
         setPage("username");
-        setShowUserDialog(false);
+        setShowUserDialog(true);
       }
     }
   }, []);
