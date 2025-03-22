@@ -15,6 +15,18 @@ function generateCode() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const {adminToken} = req.cookies;
+
+    if (!adminToken) {
+        res.status(401).json({ message: 'Admin token is required' });
+        return;
+    }
+
+    if (adminToken !== 'Think_diff3r3nt_Admin') {
+        res.status(401).json({ message: 'Wrong admin token' });
+        return;
+    }
+
     if (req.method === 'POST') {
         const { name } = req.body;
         const record = await prisma.rooms.create({

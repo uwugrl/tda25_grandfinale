@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const record = await prisma.rooms.findFirst({
         where: {
             inviteCode: code,
-            // state: "starting"
+            state: "starting"
         }
     });
 

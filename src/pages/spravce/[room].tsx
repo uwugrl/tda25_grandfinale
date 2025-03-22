@@ -9,6 +9,26 @@ import QRCode from "qrcode";
 const prisma = new PrismaClient();
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+    const { adminToken } = ctx.req.cookies;
+    
+    if (!adminToken) {
+        return {
+            redirect: {
+                destination: '/login',
+                permanent: false
+            }
+        }
+    }
+
+    if (adminToken !== 'Think_diff3r3nt_Admin') {
+        return {
+            redirect: {
+                destination: '/login',
+                permanent: false
+            }
+        }
+    }
+
     const { room } = ctx.params as { room: string };
 
     if (isNaN(Number(room))) {

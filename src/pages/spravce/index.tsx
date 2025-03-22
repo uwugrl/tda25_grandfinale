@@ -1,7 +1,7 @@
 import { Button, Input, Modal, ModalClose, ModalDialog, Table, Typography } from "@mui/joy";
 import { PrismaClient } from "@prisma/client";
 import { captureException } from "@sentry/nextjs";
-import { InferGetServerSidePropsType } from "next";
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { stat } from "node:fs/promises";
 import React from "react";
 
@@ -20,7 +20,27 @@ function stateToReadable(state: string) {
     }
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+    const {adminToken} = ctx.req.cookies;
+    
+    if (!adminToken) {
+        return {
+            redirect: {
+                destination: '/login',
+                permanent: false
+            }
+        }
+    }
+
+    if (adminToken !== 'Think_diff3r3nt_Admin') {
+        ctx.res.setHeader('Set-Cookie', `adminToken=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT`);
+        return {
+            redirect: {
+                destination: '/login',
+                permanent: false
+            }
+        }
+    }
     
     const rooms = await prisma.rooms.findMany();
 

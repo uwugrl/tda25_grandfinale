@@ -4,6 +4,19 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 const prisma = new PrismaClient();
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+    const {adminToken} = req.cookies;
+
+    if (!adminToken) {
+        res.status(401).json({ message: 'Admin token is required' });
+        return;
+    }
+
+    if (adminToken !== 'Think_diff3r3nt_Admin') {
+        res.status(401).json({ message: 'Wrong admin token' });
+        return;
+    }
+
     if (req.method !== 'POST') {
         res.status(405).json({ message: 'Method not allowed' });
         return;
