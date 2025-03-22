@@ -372,19 +372,27 @@ function PageVoting(props: {
 
   if (votingFinished) {
     return <>
-      <Typography>Hlasování bylo dokončeno</Typography>
-      <Typography level="h2">Nejlepší návrhy</Typography>
-      <Typography level="h3">Přínosnost</Typography>
-      <Typography>{bestPrinosnost?.idea} - {bestPrinosnost?.username}</Typography>
-      <Slider  value={bestPrinosnost?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
-
-      <Typography level="h3">Kreativita</Typography>
-      <Typography>{bestKreativita?.idea} - {bestKreativita?.username}</Typography>
-      <Slider  value={bestKreativita?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
-
-      <Typography level="h3">Uskutečnitelnost</Typography>
-      <Typography>{bestUskutecnost?.idea} - {bestUskutecnost?.username}</Typography>
-      <Slider value={bestUskutecnost?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+      <Typography level="h2" textAlign={"center"}>Nejlepší návrhy</Typography>
+      <br />
+      <Stack gap={1}>
+        <Typography level="h3">Přínosnost</Typography>
+        <Typography>{bestPrinosnost?.idea} - {bestPrinosnost?.username}</Typography>
+        <Slider  value={bestPrinosnost?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+        <br />
+        <Typography level="h3">Kreativita</Typography>
+        <Typography>{bestKreativita?.idea} - {bestKreativita?.username}</Typography>
+        <Slider  value={bestKreativita?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+        <br />
+        <Typography level="h3">Uskutečnitelnost</Typography>
+        <Typography>{bestUskutecnost?.idea} - {bestUskutecnost?.username}</Typography>
+        <Slider value={bestUskutecnost?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+        <br />
+        <Button onClick={() => {
+          localStorage.removeItem('code');
+          localStorage.removeItem('username');
+          location.href = '/';
+        }}>Zpět</Button>
+      </Stack>
     </>
   }
 
@@ -471,7 +479,6 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
 
   return (
     <div className="w-2/3 m-auto">
-      <br />
       <br />
       <br />
       <br />
