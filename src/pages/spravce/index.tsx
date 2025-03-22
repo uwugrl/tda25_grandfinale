@@ -116,7 +116,6 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
                         <th>Název</th>
                         <th>Kód</th>
                         <th>Datum konání</th>
-                        <th>Stav</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -130,9 +129,6 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
                             </td>
                             <td>
                                 <Typography>{x.date}</Typography>
-                            </td>
-                            <td>
-                                <Typography>Probíhá</Typography>
                             </td>
                         </tr>
                     ))}
