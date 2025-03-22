@@ -1,4 +1,4 @@
-import { Button, Stack, Table, Typography } from "@mui/joy";
+import { Button, Slider, Stack, Table, Typography } from "@mui/joy";
 import { PrismaClient } from "@prisma/client";
 import { captureException } from "@sentry/nextjs";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next"
@@ -7,6 +7,36 @@ import React from "react";
 import QRCode from "qrcode";
 
 const prisma = new PrismaClient();
+
+async function getBestPresenters(id: number) {
+    const bestPresenters = await prisma.presenters.findMany({
+        where: {
+            joinedRoomId: id
+        },
+        include: {
+        Votes: true,
+        },
+    });
+
+    const rankedPresenters = bestPresenters.map((presenter) => {
+        const totalVotes = presenter.Votes.length || 1;
+        return {
+        id: presenter.id,
+        username: presenter.username,
+        idea: presenter.idea,
+        prinosnost: presenter.Votes.reduce((acc, v) => acc + v.prinosnost, 0) / totalVotes,
+        kreativita: presenter.Votes.reduce((acc, v) => acc + v.kreativita, 0) / totalVotes,
+        uskutecnost: presenter.Votes.reduce((acc, v) => acc + v.uskutecnost, 0) / totalVotes,
+        };
+    });
+
+    return {
+        bestByPrinosnost: [...rankedPresenters].sort((a, b) => b.prinosnost - a.prinosnost),
+        bestByKreativita: [...rankedPresenters].sort((a, b) => b.kreativita - a.kreativita),
+        bestByUskutecnost: [...rankedPresenters].sort((a, b) => b.uskutecnost - a.uskutecnost),
+    };
+}
+
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const { adminToken } = ctx.req.cookies;
@@ -68,6 +98,22 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
         }
     }
 
+    const presenter = await prisma.presenters.findFirst({
+        where: {
+            joinedRoomId: Number(room),
+            OR: [
+                {votingState: 1},
+                {presenting: true}
+            ]
+        }
+    });
+
+    let summary = null as any;
+
+    if (presenter) {
+        summary = await getBestPresenters(roomData.id);
+    }
+
     const anyonePresenting = roomData.Presenters.some(x => x.presenting);
     return {
         props: {
@@ -86,7 +132,8 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
                 })),
                 state: roomData.state,
                 showNext: roomData.paused || !anyonePresenting
-            }
+            },
+            summary: summary ? summary : null
         }
     }
 }
@@ -169,6 +216,26 @@ export default function Room(params: InferGetServerSidePropsType<typeof getServe
                 <canvas width={400} height={400} ref={canvasRef}></canvas>
             </div>}
             
+            {params.summary && params.summary.prinosnost && params.summary.kreativita && params.summary.uskutecnost && <Stack gap={1}>
+                <Typography level="h3">Přínosnost</Typography>
+                <Typography>{params.summary.prinosnost.idea} - {params.summary.prinosnost.username}</Typography> 
+                <Slider  value={params.summary.prinosnost.prinosnost} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+                <br />
+                <Typography level="h3">Kreativita</Typography>
+                <Typography>{params.summary.kreativita.idea} - {params.summary.kreativita.username}</Typography> 
+                <Slider  value={params.summary.kreativita.kreativita} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+                <br />
+                <Typography level="h3">Uskutečnitelnost</Typography>
+                <Typography>{params.summary.uskutecnost.idea} - {params.summary.uskutecnost.username}</Typography> 
+                <Slider value={params.summary.uskutecnost.uskutecnost} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+                <br />
+                <Button onClick={() => {
+                localStorage.removeItem('code');
+                localStorage.removeItem('username');
+                location.href = '/';
+                }}>Zpět</Button>
+            </Stack>}
+
             <Typography level="h2">Prezentující ({params.room.presenters.length})</Typography>
             
             <Table>

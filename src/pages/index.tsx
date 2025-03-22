@@ -4,7 +4,6 @@ import { captureException } from "@sentry/nextjs";
 import { InferGetServerSidePropsType } from "next";
 import React from "react";
 import { useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
 import Header from "./components/Header";
 
 const prisma = new PrismaClient();
@@ -20,7 +19,7 @@ export async function getServerSideProps() {
 }
 
 function PageEnterCode(props: {
-  setPage: (page: string) => void;
+  openUsername: () => void;
   setCode: (code: string) => void;
 }) {
 
@@ -50,7 +49,7 @@ function PageEnterCode(props: {
       })
     }).then(x => {
       if (x.ok) {
-        props.setPage("username");
+        props.openUsername();
         props.setCode(enteredCode);
         localStorage.setItem('code', enteredCode);
         setLoading(false);
@@ -74,116 +73,6 @@ function PageEnterCode(props: {
   </Stack>
 }
 
-function PageEnterUserDetails(props: {
-  setPage: (page: string) => void;
-  setUsername: (username: string) => void;
-  code: string;
-}) {
-
-  const [username, setUsername] = useState("");
-  const [creatingPlan, setCreatingPlan] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const next = () => {
-    if (creatingPlan) {
-      props.setPage("presenter");
-      return;
-    }
-    props.setUsername(username);
-
-    fetch('/api/joinuser', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        code: props.code,
-        username: username
-      })
-    }).then(x => {
-      if (x.ok) {
-        x.json().then(y => {
-          props.setUsername(username);
-          props.setPage("voting");
-          localStorage.setItem('username', username);
-        }).catch(x => {
-          captureException(x);
-        });
-      } else {
-        setError('Neplatný kód');
-        setLoading(false);
-        captureException(x);
-      }
-    }).catch(x => {
-      setError('Neplatný kód');
-      setLoading(false);
-      captureException(x);
-    });
-  }
-
-  return <Stack gap={1}>
-    <Typography>Uživatelské jméno</Typography>
-    <Input value={username} onChange={(e) => {
-      setUsername(e.currentTarget.value);
-      props.setUsername(e.currentTarget.value);
-    }} disabled={loading} />
-    <Stack gap={1} direction={"row"}>
-      <Checkbox checked={creatingPlan} onChange={(e) => setCreatingPlan(e.currentTarget.checked)} disabled={loading}></Checkbox>
-      <Typography>Chci prezentovat</Typography>
-      {error && <Typography color="danger">{error}</Typography>}
-    </Stack>
-    <Button disabled={loading} onClick={next}>{creatingPlan ? 'Další' : "Připojit"}</Button>
-  </Stack>
-}
-
-function PageEnterPresenterDetails(props: {
-  setPage: (page: string) => void;
-  code: string;
-  username: string;
-}) {
-  const [idea, setIdea] = useState("");
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const submitIdea = () => {
-    fetch('/api/addpresenter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        code: props.code,
-        username: props.username,
-        idea: idea
-      })
-    }).then(x => {
-      if (x.ok) {
-        x.json().then(y => {
-          props.setPage("voting");
-        }).catch(x => {
-          captureException(x);
-        });
-      } else {
-        setError('Neplatný kód');
-        setLoading(false);
-        captureException(x);
-      }
-    }).catch(x => {
-      setError('Neplatný kód');
-      setLoading(false);
-      captureException(x);
-    });
-  }
-
-  return <Stack gap={1}>
-    <Typography>Váš nápad</Typography>
-    <Input value={idea} onChange={(e) => setIdea(e.currentTarget.value)} disabled={loading} />
-    <Button onClick={submitIdea} disabled={loading}>Připojit se</Button>
-    {error && <Typography color="danger">{error}</Typography>}
-  </Stack>
-}
-
 function PageVoting(props: {
   setPage: (page: string) => void;
   code: string;
@@ -199,9 +88,9 @@ function PageVoting(props: {
   const [paused, setPaused] = useState(false);
   const [presentingFinished, setPresentingFinished] = useState(false);
 
-  const [bestPrinosnost, setBestPrinosnost] = useState<{username: string, idea: string, value: number} | undefined>(undefined);
-  const [bestKreativita, setBestKreativita] = useState<{username: string, idea: string, value: number} | undefined>(undefined);
-  const [bestUskutecnost, setBestUskutecnost] = useState<{username: string, idea: string, value: number} | undefined>(undefined);
+  const [bestPrinosnost, setBestPrinosnost] = useState<{ username: string, idea: string, value: number } | undefined>(undefined);
+  const [bestKreativita, setBestKreativita] = useState<{ username: string, idea: string, value: number } | undefined>(undefined);
+  const [bestUskutecnost, setBestUskutecnost] = useState<{ username: string, idea: string, value: number } | undefined>(undefined);
 
   const [prinosnost, setPrinosnost] = useState(1);
   const [kreativita, setKreativita] = useState(1);
@@ -377,15 +266,15 @@ function PageVoting(props: {
       <Stack gap={1}>
         <Typography level="h3">Přínosnost</Typography>
         <Typography>{bestPrinosnost?.idea} - {bestPrinosnost?.username}</Typography>
-        <Slider  value={bestPrinosnost?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+        <Slider value={bestPrinosnost?.value} min={1} max={6} marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
         <br />
         <Typography level="h3">Kreativita</Typography>
         <Typography>{bestKreativita?.idea} - {bestKreativita?.username}</Typography>
-        <Slider  value={bestKreativita?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+        <Slider value={bestKreativita?.value} min={1} max={6} marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
         <br />
         <Typography level="h3">Uskutečnitelnost</Typography>
         <Typography>{bestUskutecnost?.idea} - {bestUskutecnost?.username}</Typography>
-        <Slider value={bestUskutecnost?.value} min={1} max={6} marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+        <Slider value={bestUskutecnost?.value} min={1} max={6} marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
         <br />
         <Button onClick={() => {
           localStorage.removeItem('code');
@@ -445,9 +334,13 @@ function PageVoting(props: {
       let color = (votingBegan ? "danger" : "success") as 'danger' | 'success';
       let text = votingBegan ? "Ukončit prezentaci" : "Spustit prezentování";
       return <>
-        <Typography>Právě prezentujete návrh</Typography>
-        {votingBegan && <Typography textAlign="right">{duration}</Typography>}
-        <Button color={color} onClick={votingBegan ? endVoting : beginVoting}>{text}</Button>
+        <br />
+        <br />
+        <Stack gap={1}>
+          <Typography textAlign="center">Připrav se na prezentaci</Typography>
+          {votingBegan && <Typography textAlign="right">{duration}</Typography>}
+          <Button color={color} onClick={votingBegan ? endVoting : beginVoting}>{text}</Button>
+        </Stack>
       </>
     }
     else {
@@ -467,13 +360,13 @@ function PageVoting(props: {
         <br />
         <Typography>Přínosnost:</Typography>
         <Slider disabled={loading} step={1} min={1} max={6} value={prinosnost} onChange={(e, x) => setPrinosnost(x as number)}
-          marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+          marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
         <Typography>Kreativita:</Typography>
         <Slider disabled={loading} step={1} min={1} max={6} value={kreativita} onChange={(e, x) => setKreativita(x as number)}
-          marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+          marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
         <Typography>Uskutečnitelnost:</Typography>
         <Slider disabled={loading} step={1} min={1} max={6} value={uskutecnost} onChange={(e, x) => setUskutecnost(x as number)}
-          marks={[{value: 1, label: 'Špatný'}, {value: 6, label: 'Dobrý'}]}></Slider>
+          marks={[{ value: 1, label: 'Špatný' }, { value: 6, label: 'Dobrý' }]}></Slider>
 
         <Button onClick={sendVote} disabled={loading}>Hlasovat</Button>
       </>
@@ -489,13 +382,91 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
   const [code, setCode] = useState('');
   const [username, setUsername] = useState("");
 
+  const [showUserDialog, setShowUserDialog] = React.useState(false);
+
+  const [creatingPlan, setCreatingPlan] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
   const hasRan = React.useRef(false);
+
+  const usernameNext = () => {
+    if (creatingPlan) {
+      setPage("presenter");
+      return;
+    }
+    setUsername(username);
+
+    fetch('/api/joinuser', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        code: code,
+        username: username
+      })
+    }).then(x => {
+      if (x.ok) {
+        x.json().then(y => {
+          setUsername(username);
+          setPage("voting");
+          setShowUserDialog(false);
+          localStorage.setItem('username', username);
+        }).catch(x => {
+          captureException(x);
+        });
+      } else {
+        setError('Neplatný kód');
+        setLoading(false);
+        captureException(x);
+      }
+    }).catch(x => {
+      setError('Neplatný kód');
+      setLoading(false);
+      captureException(x);
+    });
+  }
+
+  const [idea, setIdea] = useState("");
+
+  const submitIdea = () => {
+    fetch('/api/addpresenter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        code: code,
+        username: username,
+        idea: idea
+      })
+    }).then(x => {
+      if (x.ok) {
+        x.json().then(y => {
+          setPage("voting");
+          setShowUserDialog(false);
+        }).catch(x => {
+          captureException(x);
+        });
+      } else {
+        setError('Neplatný kód');
+        setLoading(false);
+        captureException(x);
+      }
+    }).catch(x => {
+      setError('Neplatný kód');
+      setLoading(false);
+      captureException(x);
+    });
+  }
 
   React.useEffect(() => {
     if (!hasRan.current) {
       hasRan.current = true;
       if (localStorage.getItem('code') && localStorage.getItem('username')) {
         setPage("voting");
+        setShowUserDialog(false);
         setCode(localStorage.getItem('code') as string);
         setUsername(localStorage.getItem('username') as string);
       }
@@ -503,6 +474,7 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
       if (location.hash.length === 7 && location.hash.slice(1).match(/^[1-9]{6}$/)) {
         setCode(location.hash.slice(1));
         setPage("username");
+        setShowUserDialog(false);
       }
     }
   }, []);
@@ -515,20 +487,38 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
 
       {page === "code" && <>
         <br /><br /><br />
-        <PageEnterCode setPage={setPage} setCode={setCode} />
-      </>}
-      {page === "username" && <>
-        <br /><br /><br />
-        <PageEnterUserDetails setPage={setPage} setUsername={setUsername} code={code} />
-      </>}
-      {page === "presenter" && <>
-        <br /><br /><br />
-        <PageEnterPresenterDetails setPage={setPage} code={code} username={username} />
+        <PageEnterCode openUsername={() => {setShowUserDialog(true); setPage("username")}} setCode={setCode} />
       </>}
       {page === "voting" && <>
         <br /><br /><br />
         <PageVoting setPage={setPage} code={code} username={username} />
       </>}
+
+      <Modal open={showUserDialog} onClose={() => {setShowUserDialog(false)
+        if (page === "username" || page === "presenter") {
+          setPage("code");
+        }
+      }}>
+        <ModalDialog>
+          <ModalClose />
+          {page === "username" && <>
+            <Typography level="h1">Zadejte své jméno</Typography>
+            <Input value={username} onChange={(e) => setUsername(e.currentTarget.value)} disabled={loading} />
+            <Stack gap={1} direction={"row"}>
+              <Checkbox checked={creatingPlan} onChange={(e) => setCreatingPlan(e.currentTarget.checked)} disabled={loading}></Checkbox>
+              <Typography>Chci prezentovat</Typography>
+              {error && <Typography color="danger">{error}</Typography>}
+            </Stack>
+            <Button onClick={usernameNext}>Další</Button>
+          </>}
+
+          {page === "presenter" && <><Typography level="h1">Váš nápad</Typography>
+            <Input value={idea} onChange={(e) => setIdea(e.currentTarget.value)} disabled={loading} />
+            <Button onClick={submitIdea} disabled={loading}>Připojit se</Button>
+            {error && <Typography color="danger">{error}</Typography>}
+          </>}
+        </ModalDialog>
+      </Modal>
 
       <Header />
     </div>
