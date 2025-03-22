@@ -11,7 +11,60 @@ datasource db {
 }
 
 model Messages {
-  id        Int      @id @default(autoincrement())
-  username  String
-  message   String
+  id       Int    @id @default(autoincrement())
+  username String
+  message  String
+}
+
+model Rooms {
+  id         Int     @id @default(autoincrement())
+  name       String
+  state      String  @default("starting")
+  inviteCode String
+  paused     Boolean
+
+  Voters     Voters[]
+  Presenters Presenters[]
+}
+
+model Voters {
+  id           Int     @id @default(autoincrement())
+  username     String
+  joinedRoomId Int
+  joinedRoom   Rooms   @relation(fields: [joinedRoomId], references: [id])
+  prinosnost   Int     @default(-1)
+  kreativita   Int     @default(-1)
+  uskutecnost  Int     @default(-1)
+  Votes        Votes[]
+
+  @@unique([id, username])
+}
+
+model Votes {
+  id          Int        @id @default(autoincrement())
+  voterId     Int
+  voter       Voters     @relation(fields: [voterId], references: [id])
+  presenterId Int
+  presenter   Presenters @relation(fields: [presenterId], references: [id])
+  prinosnost  Int        @default(-1)
+  kreativita  Int        @default(-1)
+  uskutecnost Int        @default(-1)
+
+  @@unique([id, voterId, presenterId])
+}
+
+model Presenters {
+  id                Int       @id @default(autoincrement())
+  username          String
+  joinedRoomId      Int
+  joinedRoom        Rooms     @relation(fields: [joinedRoomId], references: [id])
+  idea              String
+  votingState       Int       @default(0)
+  presenting        Boolean   @default(false)
+  presented         Boolean   @default(false)
+  presentationStart DateTime?
+  presentationEnd   DateTime?
+  Votes             Votes[]
+
+  @@unique([id, username])
 }
