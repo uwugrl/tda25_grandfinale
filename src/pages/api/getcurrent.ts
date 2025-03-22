@@ -6,8 +6,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 const prisma = new PrismaClient();
 
 
-async function getBestPresenters() {
+async function getBestPresenters(id: number) {
     const bestPresenters = await prisma.presenters.findMany({
+        where: {
+            joinedRoomId: id
+        },
         include: {
         Votes: true,
         },
@@ -78,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!presenter) {
 
-        const results = await getBestPresenters();
+        const results = await getBestPresenters(room.id);
 
         res.status(200).json({ 
             finished: true,

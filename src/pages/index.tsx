@@ -202,9 +202,9 @@ function PageVoting(props: {
   const [bestKreativita, setBestKreativita] = useState<{username: string, idea: string, value: number} | undefined>(undefined);
   const [bestUskutecnost, setBestUskutecnost] = useState<{username: string, idea: string, value: number} | undefined>(undefined);
 
-  const [prinosnost, setPrinosnost] = useState(0);
-  const [kreativita, setKreativita] = useState(0);
-  const [uskutecnost, setUskutecnost] = useState(0);
+  const [prinosnost, setPrinosnost] = useState(1);
+  const [kreativita, setKreativita] = useState(1);
+  const [uskutecnost, setUskutecnost] = useState(1);
 
   const [hasVoted, setHasVoted] = useState(false);
 
