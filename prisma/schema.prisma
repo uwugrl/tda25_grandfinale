@@ -22,6 +22,7 @@ model Rooms {
   state      String  @default("starting")
   inviteCode String
   paused     Boolean
+  planDate DateTime
 
   Voters     Voters[]
   Presenters Presenters[]

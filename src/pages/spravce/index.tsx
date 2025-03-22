@@ -2,7 +2,6 @@ import { Button, Input, Modal, ModalClose, ModalDialog, Table, Typography } from
 import { PrismaClient } from "@prisma/client";
 import { captureException } from "@sentry/nextjs";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import { stat } from "node:fs/promises";
 import React from "react";
 
 const prisma = new PrismaClient();
@@ -45,14 +44,14 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const rooms = await prisma.rooms.findMany();
 
 
-
     return {
         props: {
             rooms: rooms.map(x => ({
                 id: x.id,
                 name: x.name,
                 state: stateToReadable(x.state),
-                code: x.inviteCode
+                code: x.inviteCode,
+                date: x.planDate.toLocaleString()
             }))
         }
     }
@@ -66,6 +65,7 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
     const [rooms, setRooms] = React.useState(props.rooms);
 
     const [roomName, setRoomName] = React.useState("");
+    const [createRoomDate, setCreateRoomDate] = React.useState(new Date().toISOString().slice(0, 16));
 
     const createTheRoom = () => {
         setCreatingRoom(true);
@@ -75,7 +75,8 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                name: roomName
+                name: roomName,
+                planDate: createRoomDate
             })
         }).then(x => {
             if (x.ok) {
@@ -87,7 +88,8 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
                         id: y.id,
                         name: roomName,
                         state: "Připojování",
-                        code: y.code
+                        code: y.code,
+                        date: new Date(createRoomDate).toLocaleString()
                     }))
                 }).catch(x => {
                     captureException(x);
@@ -113,6 +115,7 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
                     <tr>
                         <th>Název</th>
                         <th>Kód</th>
+                        <th>Datum konání</th>
                         <th>Stav</th>
                     </tr>
                 </thead>
@@ -124,6 +127,9 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
                             </td>
                             <td>
                                 <Typography>{x.code}</Typography>
+                            </td>
+                            <td>
+                                <Typography>{x.date}</Typography>
                             </td>
                             <td>
                                 <Typography>Probíhá</Typography>
@@ -139,6 +145,9 @@ export default function Spravce(props: InferGetServerSidePropsType<typeof getSer
                     <Typography level="h1">Vytvořit roomku</Typography>
                     <Typography>Název</Typography>
                     <Input value={roomName} onChange={(e) => setRoomName(e.target.value)} disabled={creatingRoom} />
+
+                    <Typography>Datum konání</Typography>
+                    <Input type="datetime-local" value={createRoomDate} onChange={(e) => setCreateRoomDate(e.currentTarget.value)} disabled={creatingRoom} />
                     
                     <Button onClick={createTheRoom} disabled={creatingRoom}>Vytvořit</Button>
                 </ModalDialog>

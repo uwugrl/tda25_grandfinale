@@ -67,7 +67,7 @@ function PageEnterCode(props: {
   }
 
   return <Stack gap={1}>
-    <Typography>Kód hlasování</Typography>
+    <Typography textAlign="center">Kód hlasování</Typography>
     <Input value={enteredCode} onChange={(e) => setEnteredCode(e.currentTarget.value)} error={!validateCode() || loading} placeholder="123456" />
     <Button disabled={!validateCode() || loading} onClick={next}>Další</Button>
     {error && <Typography color="danger">{error}</Typography>}
@@ -431,7 +431,7 @@ function PageVoting(props: {
 
   if (!hasPresenter) {
     return <Stack gap={1}>
-      <Typography>Čekání na začátek hlasování</Typography>
+      <Typography textAlign="center">Čekání na začátek</Typography>
       <Button color="danger" onClick={leaveUser}>Odejít</Button>
     </Stack>
   }

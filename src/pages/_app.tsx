@@ -7,7 +7,7 @@ const dosis = localFont({ src: './fonts/Dosis.ttf' });
 
 const theme = extendTheme({
   fontFamily: {
-    body: dosis.style.fontFamily,
+    body: dosis.style.fontFamily, 
     display: dosis.style.fontFamily
   }
 })
