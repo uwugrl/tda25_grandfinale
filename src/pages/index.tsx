@@ -5,6 +5,7 @@ import { InferGetServerSidePropsType } from "next";
 import React from "react";
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import Header from "./components/Header";
 
 const prisma = new PrismaClient();
 
@@ -470,7 +471,10 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
 
   return (
     <div className="w-2/3 m-auto">
-      <Typography level="h1" textAlign="center">Think different Academy hlasování</Typography>
+      <br />
+      <br />
+      <br />
+      <br />
 
       {page === "code" && <>
         <br /><br /><br />
@@ -488,6 +492,8 @@ export default function MainPage(props: InferGetServerSidePropsType<typeof getSe
         <br /><br /><br />
         <PageVoting setPage={setPage} code={code} username={username} />
       </>}
+
+      <Header />
     </div>
   );
 }
