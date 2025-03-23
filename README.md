@@ -1,40 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+[Čeština](README_CZ.md) | [English](README.md)
 
-## Getting Started
+# Think different Academy
 
-First, run the development server:
+> Warning: this code was written in 7 hours, and this is noticeable in the quality of the code. Since this project was part of a competition, and I am in charge of other projects, this project is not supported.
+> I hereby indicate that all bugs found in this application are features.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+App for the grand finals of the [Tour de App](https://tourde.app/) competition.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Created by
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- mldchan - [Web](https://mldchan.dev/), [GitHub](https://github.com/mldchan), [code.mldchan.dev](https://code.mldchan.dev/mld), [Fedi](https://social.mldchan.dev/@mld)
+- Krystof - [code.mldchan.dev](https://code.mldchan.dev/Krysunka), [Fedi](https://social.mldchan.dev/@Krysunka)
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## About the application
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+The application is built using NextJS and TailwindCSS. We use Prism for database design and SQLite to store the data on
+disk.
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Development
 
-## Learn More
+If you want to run this application in development, you can use the following commands:
 
-To learn more about Next.js, take a look at the following resources:
+1. `git clone https://code.mldchan.dev/mld/tda25_grandfinale.git` - clone the repository (or use GitHub)
+2. `cd tda25_grandfinale` - move to the project folder
+3. `yarn install` - download the libraries
+4. `yarn dev` - start the development server
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## Building to production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+If you want to build the application into production, you can use the following commands:
 
-## Deploy on Vercel
+1. `git clone https://code.mldchan.dev/mld/tda25_grandfinale.git` - clone the repository (or use GitHub)
+2. `cd tda25_grandfinale` - move to the project folder
+3. `yarn install` - download the libraries
+4. `yarn build` - build the application
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Our application can also be built as a Docker image. For this you need to have Docker installed. If you have it, you can
+use the following commands:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+1. `git clone https://code.mldchan.dev/mld/tda25_grandfinale.git` - clone the repository (or use GitHub)
+2. `cd tda25_grandfinale` - move to the project folder
+3. `docker build -t tda25_grandfinale:latest .` - build Docker image
+
+The application runs on port 80, use `docker run -p 80:80 tda25_grandfinale:latest` to run the application.
+
+## License
+
+The entire application is licensed under the GNU AGPL v3. This license is intended for web applications. Any application using our
+code must be under the same license. See the `LICENSE` file for more information.
